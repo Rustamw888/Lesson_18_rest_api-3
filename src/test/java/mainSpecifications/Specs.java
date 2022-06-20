@@ -24,7 +24,9 @@ public class Specs {
 
     public static ResponseSpecification specResponse400 = new ResponseSpecBuilder()
             .expectStatusCode(400)
-            .build();
+            .build()
+            .contentType(ContentType.JSON)
+            .log().body();
 
     public static ResponseSpecification specResponse200 = new ResponseSpecBuilder()
             .expectStatusCode(200)

@@ -106,7 +106,6 @@ public class HomeWorkApiTests {
                 .when()
                 .post(EndpointsData.REGISTER_POINT.title)
                 .then()
-                .log().all()
                 .spec(specResponse400)
                 .body("error", is("Missing email or username"));
     }
@@ -125,7 +124,6 @@ public class HomeWorkApiTests {
                     .post(EndpointsData.REGISTER_POINT.title)
                     .then()
                     .spec(specResponse400)
-                    .log().body()
                     .body("error", is("Missing password"));
         }
     }
