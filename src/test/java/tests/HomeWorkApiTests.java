@@ -1,11 +1,10 @@
 package tests;
 
-import api.model.CreateData;
-import api.model.NegativeRegistrationData;
-import api.model.UserData;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import model.CreateUser;
+import lombok.User;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.WrongEmail;
 import org.junit.jupiter.api.Test;
 import network.EndpointsData;
 
@@ -16,18 +15,24 @@ import java.util.stream.Collectors;
 
 import static io.restassured.RestAssured.given;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static mainSpecifications.Specs.specRequest;
+import static mainSpecifications.Specs.specResponse204;
+import static mainSpecifications.Specs.specResponse400;
+import static mainSpecifications.Specs.specWithoutPathRequest;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class HomeWorkApiTests extends TestBase {
+public class HomeWorkApiTests {
 
     @Test
     public void listUsersTest() {
-        List<UserData> users = given()
+        List<User> users = given()
+                .spec(specRequest)
                 .when()
                 .get(EndpointsData.LIST_USER_POINT.title)
-                .then().log().all()
-                .extract().body().jsonPath().getList("data", UserData.class);
+                .then()
+                .log().all()
+                .extract().body().jsonPath().getList("data", User.class);
         users.forEach(x -> assertTrue(x.getAvatar().contains(x.getId().toString())));
         assertTrue(users.stream().allMatch(x -> x.getEmail().endsWith("@reqres.in")));
         assertTrue(users.stream().allMatch(x -> x.getAvatar().endsWith("image.jpg")));
@@ -35,15 +40,17 @@ public class HomeWorkApiTests extends TestBase {
 
     @Test
     public void listUsersTestWithIteration() {
-        List<UserData> users = given()
+        List<User> users = given()
+                .spec(specRequest)
                 .when()
                 .get(EndpointsData.LIST_USER_POINT.title)
-                .then().log().all()
-                .extract().body().jsonPath().getList("data", UserData.class);
+                .then()
+                .log().all()
+                .extract().body().jsonPath().getList("data", User.class);
         users.forEach(x -> assertTrue(x.getAvatar().contains(x.getId().toString())));
         assertTrue(users.stream().allMatch(x -> x.getEmail().endsWith("@reqres.in")));
-        List<String> avatars = users.stream().map(UserData::getAvatar).collect(Collectors.toList());
-        List<String> emails = users.stream().map(UserData::getEmail).collect(Collectors.toList());
+        List<String> avatars = users.stream().map(User::getAvatar).collect(Collectors.toList());
+        List<String> emails = users.stream().map(User::getEmail).collect(Collectors.toList());
         for (String avatar : avatars) {
             assertTrue(avatar.endsWith("image.jpg"));
         }
@@ -56,13 +63,16 @@ public class HomeWorkApiTests extends TestBase {
     public void createTest() {
         String name = "morpheus";
         String job = "leader";
-        CreateData createData = new CreateData().setName(name).setJob(job).build();
+        CreateUser createData = new CreateUser();
+        createData.setName(name);
+        createData.setJob(job);
         given()
+                .spec(specRequest)
                 .body(createData)
                 .when()
                 .post(EndpointsData.CREATE_POINT.title)
                 .then().log().all()
-                .extract().as(CreateData.class);
+                .extract().as(CreateUser.class);
         assertEquals(name, createData.getName());
         assertEquals(job, createData.getJob());
     }
@@ -70,29 +80,34 @@ public class HomeWorkApiTests extends TestBase {
     @Test
     public void singleUserTest() {
         given()
+                .spec(specWithoutPathRequest)
                 .when()
                 .get(EndpointsData.SINGLE_USER.title)
-                .then().log().all()
+                .then()
+                .log().all()
                 .body("data.id", is(2));
     }
 
     @Test
     public void deleteUserTest() {
         given()
+                .spec(specWithoutPathRequest)
                 .when()
                 .delete(EndpointsData.SINGLE_USER.title)
-                .then().log().status()
-                .statusCode(204);
+                .then()
+                .spec(specResponse204);
     }
 
     @Test
     public void unsuccessfulRegisterTest() {
         given()
-                .body(new NegativeRegistrationData(EndpointsData.WRONG_EMAIL.title))
+                .spec(specWithoutPathRequest)
+                .body(new WrongEmail(EndpointsData.WRONG_EMAIL.title))
                 .when()
                 .post(EndpointsData.REGISTER_POINT.title)
-                .then().log().all()
-                .statusCode(400)
+                .then()
+                .log().all()
+                .spec(specResponse400)
                 .body("error", is("Missing email or username"));
     }
 
@@ -104,12 +119,14 @@ public class HomeWorkApiTests extends TestBase {
             String json = (new String(is.readAllBytes(), UTF_8));
             JsonNode jsonNode = objectMapper.readTree(json);
             given()
+                    .spec(specRequest)
                     .body(jsonNode)
                     .when()
                     .post(EndpointsData.REGISTER_POINT.title)
-                    .then().log().all()
-                    .statusCode(400)
-                    .body("error", is("Missing email or username"));
+                    .then()
+                    .spec(specResponse400)
+                    .log().body()
+                    .body("error", is("Missing password"));
         }
     }
 }
