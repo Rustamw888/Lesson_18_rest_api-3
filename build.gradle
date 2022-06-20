@@ -1,6 +1,10 @@
 plugins {
-    id 'java-library'
+    id 'java'
+    id "io.freefair.lombok" version "6.0.0-m2"
 }
+
+group 'org.example'
+version '1.0-SNAPSHOT'
 
 repositories {
     mavenCentral()
@@ -10,10 +14,11 @@ dependencies {
     testImplementation(
             "io.rest-assured:rest-assured:5.1.0",
             "org.junit.jupiter:junit-jupiter:5.8.2",
-            "org.slf4j:slf4j-simple:1.7.36"
+            "org.slf4j:slf4j-simple:1.7.36",
+            "com.fasterxml.jackson.core:jackson-databind:2.11.2"
     )
 }
 
-tasks.withType(Test) {
+test {
     useJUnitPlatform()
 }
